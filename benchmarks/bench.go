@@ -59,7 +59,7 @@ func main() {
 	metrics = append(metrics, find(raw, "(\\S*)\\s*\\S* ns/op"))
 
 	// os:architecture:cpu:time:allocations:bytes:avergae:iterations
-	output := strings.Join(metrics, ":")
+	output := strings.Join(metrics, "\n")
 	fmt.Println(output)
 }
 
