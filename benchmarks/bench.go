@@ -4,12 +4,19 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
 func main() {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := path.Dir(filename)
+	os.Chdir(dir)
+
 	algorithm := flag.String("algorithm", "", "")
 	iterations := flag.String("iterations", "", "")
 	time := flag.String("time", "", "")
