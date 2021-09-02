@@ -1,27 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"os/exec"
 	"regexp"
+	"strings"
 )
 
-type Output struct {
-	Os           string `json:"os"`
-	Architecture string `json:"architecture"`
-	Cpu          string `json:"cpu"`
-	Iterations   string `json:"iterations"`
-	Time         string `json:"time"`
-	Average      string `json:"average"`
-	Allocations  string `json:"allocations"`
-	Bytes        string `json:"bytes"`
-}
-
 func main() {
-	// use flags to read input
 	algorithm := flag.String("algorithm", "", "")
 	iterations := flag.String("iterations", "", "")
 	time := flag.String("time", "", "")
@@ -52,21 +40,20 @@ func main() {
 
 	raw := string(data)
 
-	var o Output
+	metrics := make([]string, 0)
 
-	o.Os = find(raw, "goos: (.*)")
-	o.Architecture = find(raw, "goarch: (.*)")
-	o.Cpu = find(raw, "cpu: (.*)")
-	o.Time = find(raw, "ok\\s*\\S*\\s*(\\S*)s")
-	o.Allocations = find(raw, "(\\S*) allocs/op")
-	o.Bytes = find(raw, "(\\S*) B/op")
-	o.Average = find(raw, "(\\S*) ns/op")
-	o.Iterations = find(raw, "(\\S*)\\s*\\S* ns/op")
+	metrics = append(metrics, find(raw, "goos: (.*)"))
+	metrics = append(metrics, find(raw, "goarch: (.*)"))
+	metrics = append(metrics, find(raw, "cpu: (.*)"))
+	metrics = append(metrics, find(raw, "ok\\s*\\S*\\s*(\\S*)s"))
+	metrics = append(metrics, find(raw, "(\\S*) allocs/op"))
+	metrics = append(metrics, find(raw, "(\\S*) B/op"))
+	metrics = append(metrics, find(raw, "(\\S*) ns/op"))
+	metrics = append(metrics, find(raw, "(\\S*)\\s*\\S* ns/op"))
 
-	output, err := json.MarshalIndent(o, "", "  ")
-	checkError(err)
-
-	fmt.Printf("%s\n", output)
+	// os:architecture:cpu:time:allocations:bytes:avergae:iterations
+	output := strings.Join(metrics, ":")
+	fmt.Println(output)
 }
 
 func checkError(err error) {
