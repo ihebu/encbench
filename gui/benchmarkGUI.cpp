@@ -3,6 +3,7 @@
 #include <wx/splitter.h>
 #include <wx/srchctrl.h>
 #include <wx/thread.h>
+#include <wx/collpane.h>
 
 #include <string>
 #include <memory>
@@ -12,7 +13,10 @@
   #include <wx/wx.h>
 #endif
 
+#include "wxGoBenchOptions.hpp"
 #include "benchmarkGUI.hpp"
+#include "wxHorizontalBarChart.hpp"
+
 
 #if defined(_WIN32)
 #elif defined(__linux__)
@@ -29,6 +33,7 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_BUTTON(ID_RUN_BENCHMARK, MyFrame::runBenchmark)
   EVT_BUTTON(ID_DRAW_GRAPH, MyFrame::OnDraw)
   EVT_SEARCHCTRL_SEARCH_BTN(ID_SEARCH_BOX, MyFrame::OnSearch)
+  EVT_COLLAPSIBLEPANE_CHANGED(ID_COLLAPSIBLE_PANE, MyFrame::OnCollapsiblePaneChange)
 wxEND_EVENT_TABLE()
 
 bool MyApp::OnInit() {
@@ -78,13 +83,10 @@ MyFrame::MyFrame(const wxString& name, const wxPoint& pos, const wxSize& size)
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
   // Setting-up Panels
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  wxPanel* left = new wxPanel(main_splitter);
+  left = new wxPanel(main_splitter);
   wxPanel* bottom_right = new wxPanel(right_splitter);
   wxPanel* upper_mid = new wxPanel(upper_right_splitter);
   wxPanel* top_right_right = new wxPanel(upper_right_splitter);
-
-  //left->SetBackgroundColour(wxColor(200, 100, 100));
-  upper_mid->SetBackgroundColour(wxColor(100, 200, 100));
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   // Splitters Configuration
@@ -146,14 +148,12 @@ MyFrame::MyFrame(const wxString& name, const wxPoint& pos, const wxSize& size)
   wxButton* unselectAll = new wxButton(bottom_right, ID_UNSELECT_ALL, "Unselect All");
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Setting-up  Choice Boxes
+  // Setting-up Choice Boxes
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   wxChoice* dataType = new wxChoice(bottom_right, ID_DATA_CHOICE);
-  dataType->Insert("Time", 0);
-  dataType->Insert("Allocated", 1);
-  dataType->Insert("Gen 0", 2);
-  dataType->Insert("Gen 1", 3);
-  dataType->Insert("Gen 2", 4);
+  dataType->Insert("Median", 0);
+  dataType->Insert("Nbr Alloc", 1);
+  dataType->Insert("Byte per Alloc", 2);
   dataType->SetSelection(0);
 
   wxChoice* graphType = new wxChoice(bottom_right, ID_GRAPH_CHOICE);
@@ -161,42 +161,62 @@ MyFrame::MyFrame(const wxString& name, const wxPoint& pos, const wxSize& size)
   graphType->Insert("Boxplot", 1);
   graphType->SetSelection(0);
 
-  inputSize = new wxChoice(left, ID_BYTE_CHOICE);
-  inputSize->Insert("10", 0);
-  inputSize->Insert("100", 1);
-  inputSize->Insert("1000", 2);
-  inputSize->Insert("10,000", 3);
-  inputSize->Insert("100,000", 4);
-  inputSize->Insert("1,000,000", 5);
-  inputSize->SetSelection(2);
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  // setting-up collapsible pane
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  wxCollapsiblePane* options_pane = new wxCollapsiblePane(left, ID_COLLAPSIBLE_PANE, wxString("Tool Option(s)"));
+  wxWindow* options_pane_win = options_pane->GetPane();
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Setting-up input boxes
+  // setting-up language-dependant benchmark tool options
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  threadsInput = new wxTextCtrl (left, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize,
-                                            wxTE_PROCESS_ENTER);
+  // currently only Go
+  go_options_win = new wxGoBenchOptions(options_pane_win);
 
-  benchCountInput = new wxTextCtrl (left, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize,
-                                            wxTE_PROCESS_ENTER);
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Setting-up a test for Charts
+  // testing chart library
   //////////////////////////////////////////////////////////////////////////////////////////////////////
+  wxHorizontalBarChart* chart_test = new wxHorizontalBarChart(upper_mid);
 
+  wxString s1 = "Yo Mama!";
+  wxString s2 = "HEEEEEEY";
+  wxString s3 = "Holyyyy!";
+  wxString s4 = "hihihihi!";
+
+  chart_test->AddChart(s1, 35.8);
+  chart_test->AddChart(s2, 120.8);
+  chart_test->AddChart(s3, 180.4);
+  chart_test->AddChart(s3, 100);
+  chart_test->AddChart(s4, 200);
+  chart_test->AddChart(s1, 10);
+  chart_test->AddChart(s2, 400);
+  chart_test->AddChart(wxT("some method"), 300);
+  chart_test->AddChart(wxT("another method"), 240);
+
+  chart_test->UpdateMax();
+
+  chart_test->SetXAxisLabel(wxT("Time (ms)"));
+  chart_test->SetYAxisLabel(wxT("Method Name"));
+  chart_test->SetTitle(wxT("Time Mean"));
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   // Setting-up  Sizers
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  wxBoxSizer* main_bottom_sizer = new wxBoxSizer(wxHORIZONTAL);
-  main_bottom_sizer->Add(inputSize, 0, wxLEFT, 5);
-  main_bottom_sizer->Add(benchCountInput, 1, wxLEFT | wxRIGHT, 5);
-  main_bottom_sizer->Add(threadsInput, 1, wxRIGHT, 5);
+  wxBoxSizer* paneSz = new wxBoxSizer(wxVERTICAL);
+  paneSz->Add(go_options_win, 1, wxEXPAND);
+  options_pane_win->SetSizer(paneSz);
+  paneSz->SetSizeHints(options_pane_win);
+
+
+  wxBoxSizer* chart_sizer = new wxBoxSizer(wxVERTICAL);
+  chart_sizer->Add(chart_test, 1, wxEXPAND);
+  upper_mid->SetSizerAndFit(chart_sizer);
 
   wxBoxSizer* main_sizer = new wxBoxSizer(wxVERTICAL);
   main_sizer->Add(searchBox, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 5);
   main_sizer->Add(algoSelectionList, 1, wxEXPAND | wxALL, 5);
-  main_sizer->Add(main_bottom_sizer, 0, wxEXPAND | wxBOTTOM, 5);
+  main_sizer->Add(options_pane, 0, wxEXPAND | wxBOTTOM, 5);
   main_sizer->Add(runBench, 0, wxALIGN_RIGHT | wxRIGHT | wxBOTTOM, 5);
-
   left->SetSizerAndFit(main_sizer);
 
   wxBoxSizer* nd_bottom_right_sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -213,11 +233,6 @@ MyFrame::MyFrame(const wxString& name, const wxPoint& pos, const wxSize& size)
   nd_sizer->Add(algoInfoList, 1, wxEXPAND | wxALL, 5);
   nd_sizer->Add(nd_right_sizer, 0, wxEXPAND);
   bottom_right->SetSizerAndFit(nd_sizer);
-
-  wxBoxSizer* charts_sizer = new wxBoxSizer(wxHORIZONTAL);
-  //charts_sizer->Add(boxplotChartCtrl, 1, wxEXPAND);
-  upper_mid->SetSizerAndFit(charts_sizer);
-
 
 }
 
@@ -388,9 +403,53 @@ std::vector<wxString> MyFrame::getBenchResults(const wxString& method) {
   }
 }
 
-// Most important function, complete ASAP!
+
+///////////////////////////////////////////////////////////////////////////////////////
+// this function generates a GOLANG command to benchmark method with provided option(s)
+//
+// method: encryption method name
+//
+// returns a wxString (std::string )
+///////////////////////////////////////////////////////////////////////////////////////
 wxString MyFrame::getGOCommand(const wxString& method) {
-  std::string cmd;
+
+  wxString cmd;             // string that will hold the generated GOLANG command
+  cmd << "go ";
+  wxString inputSz;       // user's chosen number of bytes if any
+
+  // if user chose nbr-of-iteration or time as input, if data is entered, use it. Else use default option.
+  switch(go_options_win->GetInputChoiceRadio()->GetSelection()) {
+
+    // iterations selected.
+    case 1: // append cmd with: go_options_win->inputIterChoice->GetStringSelection();
+            break;
+
+    // time selected
+    case 2: if (!go_options_win->GetInputTime()->IsEmpty())
+              // append cmd with: go_options_win->inputTime->GetValue();
+            break;
+
+    // else use default options
+    default: break;
+  }
+
+  // if user selected something use the selected option, else use default option
+  if( go_options_win->GetInputSize()->GetSelection() != 0) {
+    inputSz = go_options_win->GetInputSize()->GetStringSelection();
+  }
+
+  // if user provided the number of threads use the provided number, else use default option
+  if (!go_options_win->GetInputThreads()->IsEmpty()) {
+    // append cmd with: go_options_win->inputThreads->GetValue();
+  }
+
+  // if user provided the number of times to run the benchmark use the provided number, else use default option
+  if (!go_options_win->GetInputBench()->IsEmpty()) {
+    // append cmd with: go_options_win->inputBrench->GetValue();
+  }
+
+  // lastly, generate GOLANG command here
+  cmd << "put options here and bla bla bla";
 
   return cmd;
 }
@@ -404,4 +463,8 @@ std::vector<wxString> MyFrame::getGOBenchResults(const wxString& method, const w
   #elif defined(__APPLE__) && defined(__MACH__)
   #endif
   return v;
+}
+
+void MyFrame::OnCollapsiblePaneChange(wxCollapsiblePaneEvent& event) {
+  left->Layout();
 }
