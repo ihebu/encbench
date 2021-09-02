@@ -2,33 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"regexp"
 )
-
-/*
-input
-
-algorithm name / regular expression
-number of iterations / time
-count
-input size
-generate cpu profile
-generate memory profile
-number of threads
-
-*/
-
-type Input struct {
-	Algorithm  string `json:"algorithm"`
-	Iterations string `json:"iterations"`
-	Time       string `json:"time"`
-	Size       string `json:"size"`
-	Threads    string `json:"threads"`
-}
 
 type Output struct {
 	Os           string `json:"os"`
@@ -42,24 +21,27 @@ type Output struct {
 }
 
 func main() {
+	// use flags to read input
+	algorithm := flag.String("algorithm", "", "")
+	iterations := flag.String("iterations", "", "")
+	time := flag.String("time", "", "")
+	size := flag.String("size", "", "")
+	threads := flag.String("threads", "", "")
 
-	var i Input
-
-	err := json.NewDecoder(os.Stdin).Decode(&i)
-	checkError(err)
+	flag.Parse()
 
 	args := []string{
 		"test",
-		"-bench=" + i.Algorithm + "/" + i.Size + "$",
+		"-bench=" + *algorithm + "/" + *size + "$",
 		"-benchmem",
-		"-cpu=" + i.Threads,
+		"-cpu=" + *threads,
 	}
 
 	var benchtime string
-	if i.Time == "" {
-		benchtime = i.Iterations + "x"
+	if *time == "" {
+		benchtime = *iterations + "x"
 	} else {
-		benchtime = i.Time + "s"
+		benchtime = *time + "s"
 	}
 
 	args = append(args, "-benchtime="+benchtime)
