@@ -4,6 +4,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
 	"testing"
 )
 
@@ -96,4 +98,42 @@ func BenchmarkAES_Decrypt_192(b *testing.B) {
 
 func BenchmarkAES_Decrypt_256(b *testing.B) {
 	benchmark_AES_Decrypt(b, 32)
+}
+
+func BenchmarkRSA_Encrypt(b *testing.B) {
+	pr, _ := rsa.GenerateKey(rand.Reader, 2048)
+
+	b.ResetTimer()
+
+	for name, data := range benchmarks {
+		b.Run(name, func(b *testing.B) {
+			var r []byte
+			for i := 0; i < b.N; i++ {
+				r, _ = rsa.EncryptOAEP(sha256.New(), rand.Reader, &pr.PublicKey, data, nil)
+			}
+			result = r
+		})
+	}
+}
+
+func BenchmarkRSA_Decrypt(b *testing.B) {
+	pr, _ := rsa.GenerateKey(rand.Reader, 2048)
+
+	encryptions := make(map[string][]byte)
+
+	for name, data := range benchmarks {
+		encryptions[name], _ = rsa.EncryptOAEP(sha256.New(), rand.Reader, &pr.PublicKey, data, nil)
+	}
+
+	b.ResetTimer()
+
+	for name := range benchmarks {
+		b.Run(name, func(b *testing.B) {
+			var r []byte
+			for i := 0; i < b.N; i++ {
+				r, _ = rsa.DecryptOAEP(sha256.New(), rand.Reader, pr, encryptions[name], nil)
+			}
+			result = r
+		})
+	}
 }
