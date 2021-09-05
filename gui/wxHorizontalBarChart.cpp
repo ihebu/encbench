@@ -9,10 +9,10 @@
 
 wxBEGIN_EVENT_TABLE(wxHorizontalBarChart, wxWindow)
   //EVT_MOTION(wxHorizontalBarChart::OnMouseMoved)
-  EVT_LEFT_DOWN(wxHorizontalBarChart::OnMouseDown)
-  EVT_LEFT_UP(wxHorizontalBarChart::OnMouseReleased)
+  //EVT_LEFT_DOWN(wxHorizontalBarChart::OnMouseDown)
+  //EVT_LEFT_UP(wxHorizontalBarChart::OnMouseReleased)
   //EVT_RIGHT_DOWN(wxHorizontalBarChart::OnRightClick)
-  EVT_LEAVE_WINDOW(wxHorizontalBarChart::OnMouseLeftWindow)
+  //EVT_LEAVE_WINDOW(wxHorizontalBarChart::OnMouseLeftWindow)
   //EVT_KEY_DOWN(wxHorizontalBarChart::OnKeyPressed)
   //EVT_KEY_UP(wxHorizontalBarChart::OnKeyReleased)
   //EVT_MOUSEWHEEL(wxHorizontalBarChart::OnMouseWheelMoved)
@@ -39,7 +39,7 @@ void wxHorizontalBarChart::paintNow() {
 
 
 
-// where magic id done!
+// where magic is done!
 void wxHorizontalBarChart::render(wxDC& dc) {
 
   // setting-up drawing tools
@@ -146,23 +146,6 @@ void wxHorizontalBarChart::render(wxDC& dc) {
 
 
 
-
-
-void wxHorizontalBarChart::OnMouseDown(wxMouseEvent& evt) {
-  paintNow();
-}
-
-void wxHorizontalBarChart::OnMouseReleased(wxMouseEvent& evt) {
-  paintNow();
-
-  wxMessageBox(wxT("You pressed a custom button!"));
-}
-
-void wxHorizontalBarChart::OnMouseLeftWindow(wxMouseEvent& evt) {
-    paintNow();
-}
-
-
 void wxHorizontalBarChart::AddChart(const wxBar& chart) {
   chartsVect.push_back(chart);
 }
@@ -190,4 +173,9 @@ void wxHorizontalBarChart::SetYAxisLabel(const wxString& text) {
 
 void wxHorizontalBarChart::SetTitle(const wxString& text) {
   title = text;
+}
+
+void wxHorizontalBarChart::ClearChart() {
+  chartsVect.clear();
+  maxValue = 0.0;
 }

@@ -12,7 +12,10 @@ enum {
   ID_DEFAULT_CB = 7,
   ID_TIME_CB = 8,
   ID_ITERATION_CB = 9,
-  ID_COLLAPSIBLE_PANE = 10
+  ID_COLLAPSIBLE_PANE = 10,
+  ID_UNSELECT_ALL_2 = 11,
+  ID_REMOVE_SELECTED = 12,
+  ID_CLEAR = 13
 };
 
 enum input {
@@ -35,70 +38,82 @@ public:
   virtual bool OnInit();
 };
 
-class MyFrame : public wxFrame
-{
+class MyFrame : public wxFrame {
 public:
+
   MyFrame(const wxString&, const wxPoint&, const wxSize&);
+
 private:
+
+  // useful for storing list item data
+  struct ItemData
+  {
+    std::string name;
+    std::string description;
+  };
+
+  // container for algoSelectionList's items data
+  std::unordered_set<std::unique_ptr<ItemData>> itemDataSet;
+
+  // to indicate sort direction for lists
+  int sortDirection = 1;
+  unsigned int maxThreads;    // = number of cpu cores
+
   // these are declared here because these will be called outside MyFrame constructor
   wxListView* algoSelectionList;
   wxListView* algoInfoList;
   wxPanel* left;
   wxGoBenchOptions* go_options_win;
+  wxHorizontalBarChart* chart_graph;
+  wxChoice* dataType;
+  wxTextCtrl* sysInfo;
 
+  // indicate which language is currently selected
   language currentLanguge;
 
-  void addListItem(int, const std::string&, const std::string&);
-  void runBenchmark(wxCommandEvent&);
-
-  std::vector<wxString> getBenchResults(const wxString&);
+  void addListItem(const std::string& method, const std::string& description);
 
   void addAlgorithmBenchResult( const wxString&, const wxString&, const wxString&, const wxString&,
                                 const wxString&);
   void addAlgorithmBenchResult(const std::vector<wxString>&);
 
+  void populateAlgoList();
+  void populateSystemInfo();
 
   void removeDuplicate(long);
   void removeDuplicate(wxString);
+
+  // events
   void OnSearch(wxCommandEvent&);
   void OnDraw(wxCommandEvent&);
+  void OnUnselect(wxCommandEvent&);
+  void OnUnselect2(wxCommandEvent&);
+  void OnRemoveSelected(wxCommandEvent&);
+  void OnClear(wxCommandEvent&);
+  void OnAbout(wxCommandEvent&);
+  void OnExit(wxCommandEvent&);
+  void OnCollapsiblePaneChange(wxCollapsiblePaneEvent& event);
+  void runBenchmark(wxCommandEvent&);
+
 
   // functions to generate commands for supported languages
-  wxString getGOCommand(const wxString&);
-  //wxString getCPPCommand(const wxString&);
-  //wxString getCSCommmand(const wxString&);
-  //wxString getPythonCommand(const wxString&);
+  std::string getGOCommand(const wxString& method);
+  //std::string getCPPCommand(const wxString& method);
+  //std::string getCSCommmand(const wxString& method);
+  //std::string getPythonCommand(const wxString& method);
 
-  std::vector<wxString> getGOBenchResults(const wxString&, const wxString&);
-  //std::vector<wxString> getCPPBenchResults(const wxString&, const wxString&);
-  //std::vector<wxString> getCSBenchResults(const wxString&, const wxString&);
-  //std::vector<wxString> getPythonBenchmarkResults(const wxString&, const wxString&);
-
-  struct ItemData
-  {
-    int id;
-    std::string name;
-    std::string description;
-  };
+  std::vector<wxString> getGOBenchResults(const wxString& method);
+  //std::vector<wxString> getCPPBenchResults(const wxString& method);
+  //std::vector<wxString> getCSBenchResults(const wxString& method);
+  //std::vector<wxString> getPythonBenchmarkResults(const wxString& method);
 
   void sortByColumn(int);
-  int sortDirection = 1;
-
-  std::unordered_set<std::unique_ptr<ItemData>> itemDataSet;
 
   static int compareInts(int, int, int);
   static int compareStrings(const std::string&, const std::string&, int);
 
-  static int idSortCallBack(wxIntPtr item1, wxIntPtr item2, wxIntPtr direction);
   static int nameSortCallBack(wxIntPtr item1, wxIntPtr item2, wxIntPtr direction);
   static int descSortCallBack(wxIntPtr item1, wxIntPtr item2, wxIntPtr directinon);
-
-  //  Menu Event handlers
-  void OnAbout(wxCommandEvent&);
-  void OnExit(wxCommandEvent&);
-
-  // more event handles
-  void OnCollapsiblePaneChange(wxCollapsiblePaneEvent& event);
 
   // event table attached to this window/class
   wxDECLARE_EVENT_TABLE();
