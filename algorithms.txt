@@ -1,3 +1,11 @@
+AES_Encrypt_128
+AES_Encrypt_192
+AES_Encrypt_256
+AES_Decrypt_128
+AES_Decrypt_192
+AES_Decrypt_256
+RSA_Encrypt
+RSA_Decrypt
 MD5
 SHA1
 SHA224
@@ -14,3 +22,5 @@ BLAKE2s_256
 BLAKE2b_256
 BLAKE2b_384
 BLAKE2b_512
+ED25519_Sign
+ED25519_Verify
